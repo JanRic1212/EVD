@@ -1,119 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Music Browser</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            text-align: center;
-        }
-
-        header {
-            background-color: #1E1E1E;
-            color: white;
-            padding: 20px;
-            font-size: 2em;
-        }
-
-        .music-list {
-            margin: 30px auto;
-            width: 80%;
-            max-width: 800px;
-        }
-
-        .music-item {
-            background-color: #fff;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .music-item:hover {
-            background-color: #efefef;
-        }
-
-        .music-player {
-            margin-top: 30px;
-            text-align: center;
-        }
-
-        footer {
-            background-color: #1E1E1E;
-            color: white;
-            padding: 10px;
-            position: fixed;
-            width: 100%;
-            bottom: 0;
-            text-align: center;
-        }
-
-        audio {
-            width: 100%;
-            max-width: 600px;
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Side Shooter Game</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+    }
+    canvas {
+      display: block;
+      background: #222;
+    }
+    #scoreBoard {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 18px;
+    }
+  </style>
 </head>
-
 <body>
 
-    <header>
-        Simple Music Browser
-    </header>
+<div id="scoreBoard">Score: 0</div>
+<canvas id="gameCanvas" width="1920" height="475"></canvas>
 
-    <div class="music-list">
-        <div class="music-item" onclick="playMusic('song1.mp3', 'Song Title 1')">
-            <h3>Song Title 1</h3>
-            <p>Artist: Artist 1</p>
-        </div>
-        <div class="music-item" onclick="playMusic('song2.mp3', 'Song Title 2')">
-            <h3>Song Title 2</h3>
-            <p>Artist: Artist 2</p>
-        </div>
-        <div class="music-item" onclick="playMusic('song3.mp3', 'Song Title 3')">
-            <h3>Song Title 3</h3>
-            <p>Artist: Artist 3</p>
-        </div>
-    </div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-    <div class="music-player">
-        <h2>Now Playing:</h2>
-        <p id="now-playing">Select a song to play</p>
-        <audio id="audio-player" controls>
-            <source id="audio-source" src="" type="audio/mp3">
-            Your browser does not support the audio element.
-        </audio>
-    </div>
+// Load dino image
+const dinoImage = new Image();
+dinoImage.src = 'dino.webp';
 
-    <footer>
-        © 2025 Simple Music Browser
-    </footer>
+let player = {
+  x: 100,
+  y: canvas.height - 60,
+  width: 40,
+  height: 40,
+  color: 'green',
+  vy: 0,
+  onGround: true
+};
 
-    <script>
-        function playMusic(songFile, songTitle) {
-            var player = document.getElementById('audio-player');
-            var source = document.getElementById('audio-source');
-            var nowPlayingText = document.getElementById('now-playing');
+let bullets = [];
+let targets = [];
+let keys = {};
+let score = 0;
+let isRapidFire = true;
+let lastFire = 0;
+let slowed = false;
+let gameOver = false;
 
-            // Update the audio source
-            source.src = songFile;
-            player.load(); // Reload the audio element
-            player.play(); // Play the audio
+const gravity = 0.8;
+const bulletSpeed = 16;
+const targetSpeed = 5;
+const jumpStrength = -25;
 
-            // Update the Now Playing text
-            nowPlayingText.textContent = 'Now Playing: ' + songTitle;
-        }
-    </script>
+// Controls
+document.addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+  if (e.code === 'KeyW' && player.onGround) {
+    player.vy = jumpStrength;
+    player.onGround = false;
+  }
+});
+
+document.addEventListener('keyup', (e) => {
+  keys[e.code] = false;
+});
+
+document.addEventListener('mousedown', (e) => {
+  const now = Date.now();
+
+  if (e.ctrlKey && !slowed) {
+    slowed = true;
+    setTimeout(() => slowed = false, 5000);
+  }
+
+  isRapidFire = !e.shiftKey;
+
+  if (isRapidFire || (!isRapidFire && now - lastFire > 500)) {
+    fireBullet();
+    lastFire = now;
+  }
+});
+
+function fireBullet() {
+  bullets.push({
+    x: player.x + player.width,
+    y: player.y + player.height / 2 - 2,
+    width: 10,
+    height: 5,
+    color: 'white'
+  });
+}
+
+function spawnTarget() {
+  targets.push({
+    x: canvas.width + 30,
+    y: Math.random() * (canvas.height - 30),
+    width: 30,
+    height: 30,
+    color: 'red'
+  });
+}
+
+function update() {
+  // Apply gravity
+  player.vy += gravity;
+  player.y += player.vy;
+
+  // Horizontal movement
+  if (keys['KeyA']) player.x -= 5;
+  if (keys['KeyD']) player.x += 5;
+
+  // Boundaries
+  player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+  if (player.y + player.height >= canvas.height) {
+    player.y = canvas.height - player.height;
+    player.vy = 0;
+    player.onGround = true;
+  }
+
+  // Bullets
+  bullets = bullets.filter(b => b.x < canvas.width);
+  bullets.forEach(b => b.x += bulletSpeed);
+
+  // Targets
+  targets.forEach(t => t.x -= slowed ? 0.5 : targetSpeed);
+  targets = targets.filter(t => t.x + t.width > 0);
+
+  // Bullet collisions
+  bullets.forEach((b, bi) => {
+    targets.forEach((t, ti) => {
+      if (
+        b.x < t.x + t.width &&
+        b.x + b.width > t.x &&
+        b.y < t.y + t.height &&
+        b.y + b.height > t.y
+      ) {
+        targets.splice(ti, 1);
+        bullets.splice(bi, 1);
+        score++;
+        document.getElementById('scoreBoard').innerText = `Score: ${score}`;
+      }
+    });
+  });
+
+  // Enemy hits player
+  targets.forEach(t => {
+    if (
+      player.x < t.x + t.width &&
+      player.x + player.width > t.x &&
+      player.y < t.y + t.height &&
+      player.y + player.height > t.y
+    ) {
+      gameOver = true;
+    }
+  });
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw player using dino image
+  if (dinoImage.complete) {
+    ctx.drawImage(dinoImage, player.x, player.y, player.width, player.height);
+  } else {
+    // Fallback if image hasn't loaded
+    ctx.fillStyle = player.color;
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+  }
+
+  // Bullets
+  bullets.forEach(b => {
+    ctx.fillStyle = b.color;
+    ctx.fillRect(b.x, b.y, b.width, b.height);
+  });
+
+  // Targets
+  targets.forEach(t => {
+    ctx.fillStyle = t.color;
+    ctx.fillRect(t.x, t.y, t.width, t.height);
+  });
+
+  if (gameOver) {
+    ctx.fillStyle = "white";
+    ctx.font = "36px sans-serif";
+    ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+    ctx.font = "18px sans-serif";
+    ctx.fillText("Press R to Restart", canvas.width / 2 - 80, canvas.height / 2 + 30);
+  }
+}
+
+function gameLoop() {
+  if (!gameOver) {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }
+}
+
+setInterval(() => {
+  if (!gameOver) spawnTarget();
+}, 1000);
+
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyR' && gameOver) {
+    resetGame();
+  }
+});
+
+function resetGame() {
+  player.x = 100;
+  player.y = canvas.height - 60;
+  bullets = [];
+  targets = [];
+  score = 0;
+  gameOver = false;
+  document.getElementById('scoreBoard').innerText = `Score: ${score}`;
+  gameLoop();
+}
+
+// Start game after dino image loads
+dinoImage.onload = () => {
+  gameLoop();
+};
+
+</script>
 
 </body>
-
 </html>
