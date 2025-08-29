@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Music Browser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        header {
+            background-color: #1E1E1E;
+            color: white;
+            padding: 20px;
+            font-size: 2em;
+        }
+
+        .music-list {
+            margin: 30px auto;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        .music-item {
+            background-color: #fff;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .music-item:hover {
+            background-color: #efefef;
+        }
+
+        .music-player {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        footer {
+            background-color: #1E1E1E;
+            color: white;
+            padding: 10px;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            text-align: center;
+        }
+
+        audio {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        Simple Music Browser
+    </header>
+
+    <div class="music-list">
+        <div class="music-item" onclick="playMusic('song1.mp3', 'Song Title 1')">
+            <h3>Song Title 1</h3>
+            <p>Artist: Artist 1</p>
+        </div>
+        <div class="music-item" onclick="playMusic('song2.mp3', 'Song Title 2')">
+            <h3>Song Title 2</h3>
+            <p>Artist: Artist 2</p>
+        </div>
+        <div class="music-item" onclick="playMusic('song3.mp3', 'Song Title 3')">
+            <h3>Song Title 3</h3>
+            <p>Artist: Artist 3</p>
+        </div>
+    </div>
+
+    <div class="music-player">
+        <h2>Now Playing:</h2>
+        <p id="now-playing">Select a song to play</p>
+        <audio id="audio-player" controls>
+            <source id="audio-source" src="" type="audio/mp3">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <footer>
+        © 2025 Simple Music Browser
+    </footer>
+
+    <script>
+        function playMusic(songFile, songTitle) {
+            var player = document.getElementById('audio-player');
+            var source = document.getElementById('audio-source');
+            var nowPlayingText = document.getElementById('now-playing');
+
+            // Update the audio source
+            source.src = songFile;
+            player.load(); // Reload the audio element
+            player.play(); // Play the audio
+
+            // Update the Now Playing text
+            nowPlayingText.textContent = 'Now Playing: ' + songTitle;
+        }
+    </script>
+
+</body>
+
+</html>
